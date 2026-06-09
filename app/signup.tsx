@@ -1,19 +1,82 @@
 import { router } from 'expo-router';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useState } from 'react';
+import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { supabase } from '../.vscode/lib/supabase';
 
 export default function SignupScreen() {
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  async function handleSignup() {
+    if (!email || !password) {
+      Alert.alert('Missing info', 'Please enter your email and password.');
+      return;
+    }
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
+        },
+      },
+    });
+
+    if (error) {
+      Alert.alert('Signup failed', error.message);
+      return;
+    }
+
+    const user = data.user;
+
+    if (user) {
+      await supabase.from('drivers').insert([
+        {
+          user_id: user.id,
+          full_name: fullName,
+          email: email,
+        },
+      ]);
+    }
+
+    Alert.alert('Account created');
+    router.replace('/onboarding');
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.logo}>Create Account</Text>
       <Text style={styles.subtitle}>Set up your LoadFlow driver profile</Text>
 
-      <TextInput style={styles.input} placeholder="Full name" placeholderTextColor="#94A3B8" />
-      <TextInput style={styles.input} placeholder="Email" placeholderTextColor="#94A3B8" />
-      <TextInput style={styles.input} placeholder="Password" placeholderTextColor="#94A3B8" secureTextEntry />
-      <TextInput style={styles.input} placeholder="Truck type" placeholderTextColor="#94A3B8" />
-      <TextInput style={styles.input} placeholder="Home base city" placeholderTextColor="#94A3B8" />
+      <TextInput
+        style={styles.input}
+        placeholder="Full name"
+        placeholderTextColor="#94A3B8"
+        value={fullName}
+        onChangeText={setFullName}
+      />
 
-      <TouchableOpacity style={styles.button} onPress={() => router.replace('/onboarding')}>
+      <TextInput
+        style={styles.input}
+        placeholder="Email"
+        placeholderTextColor="#94A3B8"
+        value={email}
+        onChangeText={setEmail}
+        autoCapitalize="none"
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="Password"
+        placeholderTextColor="#94A3B8"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+      />
+
+      <TouchableOpacity style={styles.button} onPress={handleSignup}>
         <Text style={styles.buttonText}>Create Account</Text>
       </TouchableOpacity>
 

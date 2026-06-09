@@ -1,29 +1,151 @@
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useState } from "react";
+import {
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity
+} from "react-native";
+
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseUrl = "https://hafppzrgvoiteegdykvb.supabase.co";
+const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhhZnBwenJndm9pdGVlZ2R5a3ZiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODI2MzUxOCwiZXhwIjoyMDkzODM5NTE4fQ.JKubCPSxILz2vTIAU9VILayWKDvWZuepOoigwlVZHUs";
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export default function PostLoadScreen() {
+  const [pickupCity, setPickupCity] = useState("");
+  const [pickupState, setPickupState] = useState("");
+  const [dropoffCity, setDropoffCity] = useState("");
+  const [dropoffState, setDropoffState] = useState("");
+  const [payAmount, setPayAmount] = useState("");
+  const [miles, setMiles] = useState("");
+  const [equipmentType, setEquipmentType] = useState("");
+  const [loadWeight, setLoadWeight] = useState("");
+  const [notes, setNotes] = useState("");
+
+  async function postLoad() {
+    if (
+      !pickupCity ||
+      !pickupState ||
+      !dropoffCity ||
+      !dropoffState ||
+      !payAmount ||
+      !miles ||
+      !equipmentType
+    ) {
+      Alert.alert("Missing Info", "Please fill out all required fields.");
+      return;
+    }
+
+    const { error } = await supabase.from("loads").insert([
+      {
+        pickup_city: pickupCity,
+        pickup_state: pickupState,
+        dropoff_city: dropoffCity,
+        dropoff_state: dropoffState,
+        pay_amount: Number(payAmount),
+        miles: Number(miles),
+        equipment_type: equipmentType,
+        load_weight: Number(loadWeight || 0),
+        notes: notes,
+        status: "open",
+      },
+    ]);
+
+    if (error) {
+      Alert.alert("Error", error.message);
+      return;
+    }
+
+    Alert.alert("Success", "Load posted live.");
+
+    setPickupCity("");
+    setPickupState("");
+    setDropoffCity("");
+    setDropoffState("");
+    setPayAmount("");
+    setMiles("");
+    setEquipmentType("");
+    setLoadWeight("");
+    setNotes("");
+  }
+
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.title}>Post </Text>
-      <Text style={styles.subtitle}>Create a new freight opportunity</Text>
+      <Text style={styles.title}>Post a Live Load</Text>
 
-      <View style={styles.card}>
-        <TextInput style={styles.input} placeholder="Pickup city" placeholderTextColor="#94A3B8" />
-        <TextInput style={styles.input} placeholder="Dropoff city" placeholderTextColor="#94A3B8" />
-        <TextInput style={styles.input} placeholder="Trailer type" placeholderTextColor="#94A3B8" />
-        <TextInput style={styles.input} placeholder="Total pay" placeholderTextColor="#94A3B8" />
-        <TextInput style={styles.input} placeholder="Estimated miles" placeholderTextColor="#94A3B8" />
+      <TextInput
+        style={styles.input}
+        placeholder="Pickup City"
+        value={pickupCity}
+        onChangeText={setPickupCity}
+      />
 
-        <TouchableOpacity style={styles.button}>
-          <Text style={styles.buttonText}>Publish Load</Text>
-        </TouchableOpacity>
-      </View>
+      <TextInput
+        style={styles.input}
+        placeholder="Pickup State"
+        value={pickupState}
+        onChangeText={setPickupState}
+      />
 
-      <View style={styles.aiCard}>
-        <Text style={styles.aiTitle}>AI Pricing Tip</Text>
-        <Text style={styles.aiText}>
-          Loads with clear pay, trailer type, and pickup windows rank higher for drivers.
-        </Text>
-      </View>
+      <TextInput
+        style={styles.input}
+        placeholder="Dropoff City"
+        value={dropoffCity}
+        onChangeText={setDropoffCity}
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="Dropoff State"
+        value={dropoffState}
+        onChangeText={setDropoffState}
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="Pay Amount"
+        value={payAmount}
+        onChangeText={setPayAmount}
+        keyboardType="numeric"
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="Miles"
+        value={miles}
+        onChangeText={setMiles}
+        keyboardType="numeric"
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="Equipment Type"
+        value={equipmentType}
+        onChangeText={setEquipmentType}
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="Load Weight"
+        value={loadWeight}
+        onChangeText={setLoadWeight}
+        keyboardType="numeric"
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="Notes"
+        value={notes}
+        onChangeText={setNotes}
+      />
+
+      <TouchableOpacity style={styles.button} onPress={postLoad}>
+        <Text style={styles.buttonText}>Post Load</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -31,67 +153,36 @@ export default function PostLoadScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#050B12',
+    backgroundColor: "#111",
     padding: 20,
   },
+
   title: {
-    color: 'white',
-    fontSize: 34,
-    fontWeight: '900',
-    marginTop: 60,
+    color: "white",
+    fontSize: 28,
+    fontWeight: "bold",
+    marginBottom: 20,
   },
-  subtitle: {
-    color: '#94A3B8',
-    fontSize: 16,
-    marginBottom: 24,
-  },
-  card: {
-    backgroundColor: '#101A27',
-    borderRadius: 18,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: '#1F2A3A',
-    marginBottom: 18,
-  },
+
   input: {
-    backgroundColor: '#050B12',
-    color: 'white',
-    padding: 16,
-    borderRadius: 14,
-    marginBottom: 14,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: '#1F2A3A',
+    backgroundColor: "white",
+    padding: 14,
+    borderRadius: 10,
+    marginBottom: 12,
   },
+
   button: {
-    backgroundColor: '#7ED957',
+    backgroundColor: "#22c55e",
     padding: 16,
-    borderRadius: 14,
-    marginTop: 4,
-  },
-  buttonText: {
-    color: '#071108',
-    textAlign: 'center',
-    fontWeight: '900',
-    fontSize: 16,
-  },
-  aiCard: {
-    backgroundColor: '#101A27',
-    borderRadius: 18,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: '#7ED957',
+    borderRadius: 12,
+    marginTop: 10,
     marginBottom: 40,
   },
-  aiTitle: {
-    color: 'white',
+
+  buttonText: {
+    color: "white",
+    fontWeight: "bold",
+    textAlign: "center",
     fontSize: 18,
-    fontWeight: '900',
-    marginBottom: 8,
-  },
-  aiText: {
-    color: '#CBD5E1',
-    fontSize: 15,
-    lineHeight: 22,
   },
 });
